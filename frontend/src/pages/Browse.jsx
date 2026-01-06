@@ -5,53 +5,72 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import CampaignCard from '../components/CampaignCard';
-import { mockStudents, categories, countries, fieldsOfStudy } from '../mockData';
+import { getCampaigns, getCategories, getCountries, getFieldsOfStudy } from '../services/api';
 
 const Browse = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [filteredStudents, setFilteredStudents] = useState(mockStudents);
+  const [campaigns, setCampaigns] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [countries, setCountries] = useState([]);
+  const [fieldsOfStudy, setFieldsOfStudy] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState({ total: 0, page: 1, total_pages: 0 });
+
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [selectedCountry, setSelectedCountry] = useState('all');
   const [selectedField, setSelectedField] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('all');
 
+  // Load static data on mount
   useEffect(() => {
-    let filtered = [...mockStudents];
+    const loadStaticData = async () => {
+      try {
+        const [catRes, countryRes, fieldsRes] = await Promise.all([
+          getCategories(),
+          getCountries(),
+          getFieldsOfStudy()
+        ]);
+        setCategories(catRes.data || []);
+        setCountries(countryRes.data || []);
+        setFieldsOfStudy(fieldsRes.data || []);
+      } catch (error) {
+        console.error('Failed to load static data:', error);
+      }
+    };
+    loadStaticData();
+  }, []);
 
-    // Search filter
-    if (searchQuery) {
-      filtered = filtered.filter(
-        (student) =>
-          student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          student.country.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          student.fieldOfStudy.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          student.story.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
+  // Load campaigns when filters change
+  useEffect(() => {
+    const loadCampaigns = async () => {
+      setLoading(true);
+      try {
+        const params = {};
+        if (searchQuery) params.search = searchQuery;
+        if (selectedCategory && selectedCategory !== 'all') params.category = selectedCategory;
+        if (selectedCountry && selectedCountry !== 'all') params.country = selectedCountry;
+        if (selectedField && selectedField !== 'all') params.field_of_study = selectedField;
 
-    // Category filter
-    if (selectedCategory && selectedCategory !== 'all') {
-      filtered = filtered.filter((student) => student.category === selectedCategory);
-    }
+        const response = await getCampaigns(params);
+        setCampaigns(response.data || []);
+        setPagination(response.pagination || { total: 0, page: 1, total_pages: 0 });
+      } catch (error) {
+        console.error('Failed to load campaigns:', error);
+        setCampaigns([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadCampaigns();
+  }, [searchQuery, selectedCategory, selectedCountry, selectedField]);
 
-    // Country filter
-    if (selectedCountry && selectedCountry !== 'all') {
-      filtered = filtered.filter((student) => student.country === selectedCountry);
-    }
-
-    // Field of study filter
-    if (selectedField && selectedField !== 'all') {
-      filtered = filtered.filter((student) => student.fieldOfStudy === selectedField);
-    }
-
-    // Status filter
-    if (selectedStatus && selectedStatus !== 'all') {
-      filtered = filtered.filter((student) => student.verificationStatus === selectedStatus);
-    }
-
-    setFilteredStudents(filtered);
-  }, [searchQuery, selectedCategory, selectedCountry, selectedField, selectedStatus]);
+  const clearFilters = () => {
+    setSearchQuery('');
+    setSelectedCategory('all');
+    setSelectedCountry('all');
+    setSelectedField('all');
+    setSearchParams({});
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -129,64 +148,30 @@ const Browse = () => {
               </SelectContent>
             </Select>
           </div>
-
-          {/* Verification Status Filter */}
-          <div className="mt-4 flex items-center space-x-4">
-            <span className="text-sm font-medium text-gray-700">Status:</span>
-            <div className="flex space-x-2">
-              <Button
-                size="sm"
-                variant={selectedStatus === 'all' ? 'default' : 'outline'}
-                onClick={() => setSelectedStatus('all')}
-              >
-                All
-              </Button>
-              <Button
-                size="sm"
-                variant={selectedStatus === 'verified' ? 'default' : 'outline'}
-                onClick={() => setSelectedStatus('verified')}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                Verified
-              </Button>
-              <Button
-                size="sm"
-                variant={selectedStatus === 'pending' ? 'default' : 'outline'}
-                onClick={() => setSelectedStatus('pending')}
-              >
-                Pending
-              </Button>
-            </div>
-          </div>
         </div>
 
         {/* Results */}
         <div className="mb-6">
           <p className="text-gray-600">
-            Showing <span className="font-semibold">{filteredStudents.length}</span> campaigns
+            Showing <span className="font-semibold">{campaigns.length}</span> of {pagination.total} campaigns
           </p>
         </div>
 
         {/* Campaign Grid */}
-        {filteredStudents.length > 0 ? (
+        {loading ? (
+          <div className="flex justify-center py-16">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        ) : campaigns.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredStudents.map((student) => (
-              <CampaignCard key={student.id} student={student} />
+            {campaigns.map((campaign) => (
+              <CampaignCard key={campaign.campaign_id} campaign={campaign} />
             ))}
           </div>
         ) : (
           <div className="text-center py-16">
             <p className="text-xl text-gray-600">No campaigns found matching your criteria.</p>
-            <Button
-              className="mt-4"
-              onClick={() => {
-                setSearchQuery('');
-                setSelectedCategory('all');
-                setSelectedCountry('all');
-                setSelectedField('all');
-                setSelectedStatus('all');
-              }}
-            >
+            <Button className="mt-4" onClick={clearFilters}>
               Clear Filters
             </Button>
           </div>
