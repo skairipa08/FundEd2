@@ -530,7 +530,7 @@ const Dashboard = ({ user }) => {
             ) : (
               <div className="text-center py-8">
                 <Heart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-lg text-gray-600 mb-6">You haven't supported any campaigns yet</p>
+                <p className="text-lg text-gray-600 mb-6">You haven&apos;t supported any campaigns yet</p>
                 <Button onClick={() => navigate('/browse')} className="bg-blue-600 hover:bg-blue-700">
                   Browse Campaigns
                 </Button>
