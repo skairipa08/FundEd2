@@ -30,32 +30,22 @@ const AuthCallback = ({ onLogin }) => {
         const sessionId = hash.split('session_id=')[1].split('&')[0];
         
         try {
-          // Exchange session_id for user data and session_token
-          const response = await fetch('https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data', {
-            headers: {
-              'X-Session-ID': sessionId
-            }
-          });
-
-          if (!response.ok) throw new Error('Failed to get session data');
-
-          const userData = await response.json();
-          
-          // Send to backend to create session
+          // Send session_id to backend to exchange for user data
+          // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
           const backendResponse = await fetch(`${API}/auth/session`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify(userData),
+            body: JSON.stringify({ session_id: sessionId }),
             credentials: 'include'
           });
 
           if (!backendResponse.ok) throw new Error('Failed to create session');
 
-          const user = await backendResponse.json();
-          onLogin(user);
-          navigate('/dashboard', { state: { user }, replace: true });
+          const result = await backendResponse.json();
+          onLogin(result.data);
+          navigate('/dashboard', { state: { user: result.data }, replace: true });
         } catch (error) {
           console.error('Auth error:', error);
           navigate('/login', { replace: true });
