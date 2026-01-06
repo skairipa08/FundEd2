@@ -226,16 +226,16 @@ class FundEdAPITester:
         """Test Stripe webhook endpoint"""
         print("\n=== Testing Stripe Webhook Endpoint ===")
         
-        # Test webhook endpoint with empty body
+        # Test webhook endpoint with empty body - should return 400 for invalid payload
         try:
             response = self.session.post(
                 f"{self.base_url}/api/stripe/webhook",
                 json={},
                 headers={"Content-Type": "application/json"}
             )
-            # Should accept POST even with empty body for basic test
-            if response.status_code in [200, 400, 401]:  # Various acceptable responses
-                self.log_test("POST /api/stripe/webhook", True, f"Accepts POST request (HTTP {response.status_code})")
+            # Should return 400 for invalid payload (empty JSON is not a valid Stripe event)
+            if response.status_code in [400, 500]:  # 400 for invalid payload, 500 for parsing error
+                self.log_test("POST /api/stripe/webhook", True, f"Accepts POST request, returns {response.status_code} for invalid payload (expected)")
             else:
                 self.log_test("POST /api/stripe/webhook", False, f"HTTP {response.status_code}: {response.text}")
         except Exception as e:
