@@ -1,45 +1,86 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Shield, GraduationCap, Heart } from 'lucide-react';
+import React, { useState } from 'react';
+import { 
+  Shield, 
+  Heart, 
+  GraduationCap, 
+  CheckCircle2,
+  Loader2
+} from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
+import { getGoogleAuthUrl } from '../services/auth';
+import { toast } from '../hooks/use-toast';
 
-const Login = ({ onLogin }) => {
-  const navigate = useNavigate();
+const Login = () => {
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
-    const redirectUrl = window.location.origin + '/dashboard';
-    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    try {
+      const authUrl = await getGoogleAuthUrl();
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: 'Login Error',
+        description: error.message || 'Failed to initialize login. Please try again.',
+        variant: 'destructive',
+      });
+      setLoading(false);
+    }
   };
+
+  const features = [
+    {
+      icon: GraduationCap,
+      title: 'For Students',
+      description: 'Create verified profiles and launch campaigns to fund your education'
+    },
+    {
+      icon: Heart,
+      title: 'For Donors',
+      description: 'Support verified students and track your impact on education'
+    },
+    {
+      icon: Shield,
+      title: 'For Admins',
+      description: 'Verify student profiles and manage the platform securely'
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center py-12 px-4">
-      <div className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full mb-4">
-            <GraduationCap className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Welcome to FundEd</h1>
-          <p className="text-lg text-gray-600">Empowering education, one student at a time</p>
+      <div className="max-w-4xl w-full">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Welcome to FundEd
+          </h1>
+          <p className="text-xl text-gray-600">
+            Sign in to support students or start your educational fundraising journey
+          </p>
         </div>
 
-        <Card>
-          <CardContent className="p-8">
-            <div className="space-y-6">
-              <div>
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Login Card */}
+          <Card className="shadow-xl">
+            <CardContent className="p-8">
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+                  <Shield className="h-8 w-8 text-blue-600" />
+                </div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Sign In</h2>
-                <p className="text-gray-600">Choose your role to get started</p>
+                <p className="text-gray-600">Use your Google account to continue</p>
               </div>
 
-              <div className="space-y-4">
-                {/* Google Sign In */}
-                <Button
-                  onClick={handleLogin}
-                  className="w-full bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-200 py-6"
-                  size="lg"
-                >
-                  <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
+              <Button
+                onClick={handleGoogleLogin}
+                disabled={loading}
+                className="w-full py-6 text-lg bg-white hover:bg-gray-50 text-gray-900 border-2 border-gray-200 shadow-sm"
+              >
+                {loading ? (
+                  <Loader2 className="mr-3 h-6 w-6 animate-spin" />
+                ) : (
+                  <svg className="mr-3 h-6 w-6" viewBox="0 0 24 24">
                     <path
                       fill="#4285F4"
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -57,48 +98,51 @@ const Login = ({ onLogin }) => {
                       d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                     />
                   </svg>
-                  Continue with Google
-                </Button>
+                )}
+                {loading ? 'Signing in...' : 'Continue with Google'}
+              </Button>
 
-                {/* Role Selection Info */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="space-y-3">
-                    <div className="flex items-start space-x-3">
-                      <GraduationCap className="h-5 w-5 text-blue-600 mt-0.5" />
-                      <div>
-                        <p className="font-semibold text-gray-900">Students</p>
-                        <p className="text-sm text-gray-600">Create campaigns and get verified</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <Heart className="h-5 w-5 text-blue-600 mt-0.5" />
-                      <div>
-                        <p className="font-semibold text-gray-900">Donors</p>
-                        <p className="text-sm text-gray-600">Support verified students</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
-                      <div>
-                        <p className="font-semibold text-gray-900">Admin</p>
-                        <p className="text-sm text-gray-600">Verify and manage campaigns</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <p className="text-xs text-gray-500 text-center">
+              <p className="mt-6 text-xs text-center text-gray-500">
                 By signing in, you agree to our Terms of Service and Privacy Policy
               </p>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <div className="text-center mt-6">
-          <Button variant="ghost" onClick={() => navigate('/')}>
-            Back to Home
-          </Button>
+          {/* Features Card */}
+          <div className="space-y-4">
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <Card key={index} className="hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-start space-x-4">
+                      <div className="flex-shrink-0">
+                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <Icon className="h-6 w-6 text-blue-600" />
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-gray-900 mb-1">{feature.title}</h3>
+                        <p className="text-sm text-gray-600">{feature.description}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-start space-x-3">
+                <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-semibold text-green-800">Secure & Verified</p>
+                  <p className="text-green-700">
+                    All students are verified by our admin team before they can create campaigns
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
