@@ -188,7 +188,7 @@ const CreateCampaign = ({ user }) => {
                 <div>
                   <h3 className="text-lg font-bold text-yellow-800">Verification Pending</h3>
                   <p className="text-yellow-700">
-                    Your profile is awaiting verification. Once approved, you'll be able to create campaigns.
+                    Your profile is awaiting verification. Once approved, you&apos;ll be able to create campaigns.
                     Check your dashboard for status updates.
                   </p>
                   <Button className="mt-4" onClick={() => navigate('/dashboard')}>
