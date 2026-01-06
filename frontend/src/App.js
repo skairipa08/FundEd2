@@ -64,7 +64,7 @@ const ProtectedRoute = ({ children, user, setUser }) => {
 function AppRouter({ user, setUser, onLogout }) {
   return (
     <div className="min-h-screen flex flex-col">
-      <Header user={user} onLogout={onLogout} />
+      <Navbar user={user} onLogout={onLogout} />
       <main className="flex-grow">
         <Routes>
           <Route path="/" element={<Home />} />
