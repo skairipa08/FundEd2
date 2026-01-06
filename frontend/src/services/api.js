@@ -55,18 +55,18 @@ export const updateCampaign = (campaignId, campaignData) =>
     body: JSON.stringify(campaignData),
   });
 
-// Donation endpoints
+// Donation endpoints (checkout doesn't need auth, but status polling may)
 export const createCheckout = (donationData) =>
   apiCall('/donations/checkout', {
     method: 'POST',
     body: JSON.stringify(donationData),
-  });
+  }, false);
 
 export const getPaymentStatus = (sessionId) =>
-  apiCall(`/donations/status/${sessionId}`);
+  apiCall(`/donations/status/${sessionId}`, {}, false);
 
 export const getCampaignDonations = (campaignId) =>
-  apiCall(`/donations/campaign/${campaignId}`);
+  apiCall(`/donations/campaign/${campaignId}`, {}, false);
 
 export const getMyDonations = () => apiCall('/donations/my');
 
