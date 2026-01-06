@@ -132,6 +132,7 @@ function AppRouter({ user, onLogin, onLogout }) {
         <Route path="/browse" element={<Browse />} />
         <Route path="/campaign/:id" element={<CampaignDetail />} />
         <Route path="/login" element={<Login onLogin={onLogin} />} />
+        <Route path="/donate/success" element={<DonateSuccess />} />
         <Route
           path="/create-campaign"
           element={
