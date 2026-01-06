@@ -278,7 +278,7 @@ const CampaignDetail = () => {
             {/* Story */}
             <Card>
               <CardHeader>
-                <CardTitle>Student's Story</CardTitle>
+                <CardTitle>Student&apos;s Story</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-700 leading-relaxed whitespace-pre-line">{campaign.story}</p>
