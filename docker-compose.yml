@@ -25,7 +25,9 @@ services:
       - MONGO_URL=mongodb://mongodb:27017
       - DB_NAME=funded_db
       - STRIPE_API_KEY=${STRIPE_API_KEY:-sk_test_placeholder}
-      - CORS_ORIGINS=http://localhost:3000,http://frontend:3000
+      - CORS_ORIGINS=http://localhost:3000
+    volumes:
+      - ./backend:/app
     depends_on:
       mongodb:
         condition: service_healthy
@@ -34,19 +36,27 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
 
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        - REACT_APP_BACKEND_URL=http://localhost:8001
+      dockerfile: Dockerfile.dev
     container_name: funded-frontend
     ports:
       - "3000:3000"
+    environment:
+      - REACT_APP_BACKEND_URL=http://localhost:8001
+      - CHOKIDAR_USEPOLLING=true
+      - WDS_SOCKET_PORT=0
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
     depends_on:
       backend:
         condition: service_healthy
+    stdin_open: true
+    tty: true
 
 volumes:
   mongodb_data:
