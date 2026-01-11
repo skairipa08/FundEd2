@@ -38,7 +38,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             dbUser = await User.create({
               email: user.email,
               name: user.name || 'User',
-              image: user.image,
+              image: user.image || undefined,
               role: isAdmin ? 'admin' : 'donor',
             });
           } else {
