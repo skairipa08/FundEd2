@@ -1,12 +1,12 @@
 import { auth } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { User, IUser, UserRole } from '@/lib/models/user';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
-export type AuthResult = {
+export interface AuthResult {
   user: IUser;
-  session: Awaited<ReturnType<typeof auth>>;
-};
+  session: NonNullable<Awaited<ReturnType<typeof auth>>>;
+}
 
 /**
  * Require authentication for an API route
