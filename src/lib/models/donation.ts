@@ -40,10 +40,9 @@ const DonationSchema = new Schema<IDonation>({
   refundedAt: { type: Date },
 }, { timestamps: true });
 
-// Indexes
+// Indexes (stripeSessionId index created by unique: true)
 DonationSchema.index({ campaignId: 1 });
 DonationSchema.index({ donorId: 1 });
-DonationSchema.index({ stripeSessionId: 1 }, { unique: true });
 DonationSchema.index({ idempotencyKey: 1 });
 DonationSchema.index({ paymentStatus: 1 });
 
