@@ -1,36 +1,294 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FundEd - Educational Crowdfunding Platform
 
-## Getting Started
+A full-stack Next.js application for educational crowdfunding with verified students, Stripe payments, and admin verification workflows. Fully deployable on Vercel.
 
-First, run the development server:
+## Features
+
+- **User Authentication**: Google OAuth via NextAuth.js
+- **Role-Based Access**: Student, Donor, Admin, Institution roles
+- **Campaign Management**: Students create campaigns after verification
+- **Payment Processing**: Stripe Checkout with webhooks
+- **Admin Dashboard**: Verify students, manage campaigns
+- **Donor Wall**: Track donations and supporters
+
+## Tech Stack
+
+- **Framework**: Next.js 15 (App Router) with TypeScript
+- **Database**: MongoDB Atlas with Mongoose
+- **Authentication**: NextAuth.js v5 (Auth.js)
+- **Payments**: Stripe Checkout & Webhooks
+- **Styling**: TailwindCSS + shadcn/ui
+- **Deployment**: Vercel
+
+---
+
+## Quick Start (Local Development)
+
+### 1. Clone and Install
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <your-repo-url>
+cd funded
+yarn install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Environment Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cp .env.example .env.local
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Edit `.env.local` with your values (see Configuration section below).
 
-## Learn More
+### 3. Run Development Server
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+yarn dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Visit [http://localhost:3000](http://localhost:3000)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Configuration
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### MongoDB Atlas
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Go to [MongoDB Atlas](https://cloud.mongodb.com)
+2. Create a cluster (free tier works fine)
+3. Create a database user with read/write access
+4. Get connection string from "Connect" > "Connect your application"
+5. Set `MONGODB_URI` in your environment
+
+### Google OAuth
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com)
+2. Create a new project (or select existing)
+3. Navigate to **APIs & Services** > **Credentials**
+4. Create **OAuth 2.0 Client ID** (Web application)
+5. Add Authorized redirect URIs:
+   - Local: `http://localhost:3000/api/auth/callback/google`
+   - Production: `https://your-app.vercel.app/api/auth/callback/google`
+6. Copy Client ID and Secret to your environment
+
+### Stripe
+
+1. Go to [Stripe Dashboard](https://dashboard.stripe.com)
+2. Get API keys from **Developers** > **API keys**
+3. For webhooks:
+   - Go to **Developers** > **Webhooks**
+   - Add endpoint: `https://your-app.vercel.app/api/stripe/webhook`
+   - Select events:
+     - `checkout.session.completed`
+     - `checkout.session.async_payment_succeeded`
+     - `checkout.session.async_payment_failed`
+     - `checkout.session.expired`
+     - `charge.refunded`
+   - Copy the signing secret to `STRIPE_WEBHOOK_SECRET`
+
+### NextAuth Secret
+
+Generate a secure secret:
+
+```bash
+openssl rand -base64 32
+```
+
+Set this as `AUTH_SECRET`.
+
+---
+
+## Vercel Deployment
+
+### 1. Import Project
+
+1. Push your code to GitHub
+2. Go to [Vercel Dashboard](https://vercel.com/dashboard)
+3. Click **Add New...** > **Project**
+4. Import your GitHub repository
+
+### 2. Configure Environment Variables
+
+In Vercel project settings, add these environment variables:
+
+| Variable | Description |
+|----------|-------------|
+| `MONGODB_URI` | MongoDB Atlas connection string |
+| `AUTH_SECRET` | Random string for NextAuth |
+| `AUTH_URL` | Your Vercel URL (e.g., `https://funded.vercel.app`) |
+| `GOOGLE_CLIENT_ID` | Google OAuth Client ID |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth Secret |
+| `STRIPE_API_KEY` | Stripe Secret Key |
+| `STRIPE_PUBLISHABLE_KEY` | Stripe Publishable Key |
+| `STRIPE_WEBHOOK_SECRET` | Stripe Webhook Signing Secret |
+| `INITIAL_ADMIN_EMAIL` | Email for first admin user |
+
+### 3. Update OAuth Redirect URIs
+
+After deployment, add your Vercel URL to Google OAuth:
+- `https://your-app.vercel.app/api/auth/callback/google`
+
+### 4. Update Stripe Webhook
+
+Update your Stripe webhook endpoint:
+- `https://your-app.vercel.app/api/stripe/webhook`
+
+### 5. Deploy
+
+Click **Deploy** in Vercel. Future pushes auto-deploy.
+
+---
+
+## Database Schema
+
+### Users
+```typescript
+{
+  email: string;
+  name: string;
+  image?: string;
+  role: 'student' | 'donor' | 'institution' | 'admin';
+  studentProfile?: {
+    country: string;
+    fieldOfStudy: string;
+    university: string;
+    verificationStatus: 'pending' | 'verified' | 'rejected';
+    verificationDocuments: Array<{ type: string; url?: string; verified: boolean }>;
+  };
+}
+```
+
+### Campaigns
+```typescript
+{
+  studentId: ObjectId;
+  title: string;
+  story: string;
+  category: 'tuition' | 'books' | 'laptop' | 'housing' | 'travel' | 'emergency';
+  targetAmount: number;
+  raisedAmount: number;
+  donorCount: number;
+  timeline: string;
+  impactLog?: string;
+  status: 'active' | 'completed' | 'cancelled' | 'suspended';
+}
+```
+
+### Donations
+```typescript
+{
+  campaignId: ObjectId;
+  donorId?: ObjectId;
+  donorName: string;
+  amount: number;
+  anonymous: boolean;
+  stripeSessionId: string;
+  paymentStatus: 'pending' | 'paid' | 'failed' | 'expired' | 'refunded';
+  idempotencyKey?: string;
+}
+```
+
+---
+
+## API Routes
+
+### Authentication
+- `GET/POST /api/auth/[...nextauth]` - NextAuth.js handlers
+- `GET /api/auth/me` - Get current user
+
+### Campaigns
+- `GET /api/campaigns` - List campaigns (with filters)
+- `POST /api/campaigns` - Create campaign (verified students)
+- `GET /api/campaigns/[id]` - Get campaign details
+- `PUT /api/campaigns/[id]` - Update campaign
+- `DELETE /api/campaigns/[id]` - Cancel campaign
+- `GET /api/campaigns/my` - Get user's campaigns
+
+### Donations
+- `POST /api/donations/checkout` - Create Stripe checkout
+- `GET /api/donations/status/[sessionId]` - Check payment status
+- `GET /api/donations/my` - Get user's donations
+
+### Stripe Webhook
+- `POST /api/stripe/webhook` - Handle Stripe events
+
+### Admin
+- `GET /api/admin/stats` - Platform statistics
+- `GET /api/admin/users` - List all users
+- `PUT /api/admin/users/[id]/role` - Update user role
+- `GET /api/admin/students` - List students
+- `GET /api/admin/students/pending` - List pending students
+- `PUT /api/admin/students/[id]/verify` - Approve/reject student
+- `GET /api/admin/campaigns` - List all campaigns
+- `PUT /api/admin/campaigns/[id]/status` - Update campaign status
+
+### Static Data
+- `GET /api/categories` - Campaign categories
+- `GET /api/countries` - Supported countries
+- `GET /api/fields-of-study` - Fields of study
+
+---
+
+## User Flow
+
+### For Students
+1. Sign in with Google
+2. Complete student profile (country, university, field of study)
+3. Upload verification documents
+4. Wait for admin approval
+5. Once verified, create a campaign
+6. Share campaign link, receive donations
+
+### For Donors
+1. Sign in with Google (optional)
+2. Browse campaigns
+3. Select campaign and donation amount
+4. Complete payment via Stripe
+5. Appear on donor wall (unless anonymous)
+
+### For Admins
+1. Sign in with the INITIAL_ADMIN_EMAIL
+2. View pending student verifications
+3. Approve or reject students
+4. Monitor campaign activity and donations
+
+---
+
+## Security Features
+
+- **Webhook Signature Verification**: All Stripe webhooks verified with STRIPE_WEBHOOK_SECRET
+- **Idempotency**: Donation records use idempotency keys to prevent duplicates
+- **Role-Based Access**: API routes check user roles before allowing actions
+- **CSRF Protection**: NextAuth.js handles CSRF automatically
+- **Secure Sessions**: JWT-based sessions with AUTH_SECRET
+
+---
+
+## Testing
+
+### Stripe Test Mode
+
+Use Stripe test keys and test card numbers:
+- Success: `4242 4242 4242 4242`
+- Decline: `4000 0000 0000 0002`
+- [More test cards](https://stripe.com/docs/testing)
+
+### Local Webhook Testing
+
+Use Stripe CLI for local webhook testing:
+
+```bash
+stripe listen --forward-to localhost:3000/api/stripe/webhook
+```
+
+---
+
+## License
+
+MIT
+
+---
+
+## Support
+
+For issues, please open a GitHub issue.
