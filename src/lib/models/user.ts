@@ -67,8 +67,7 @@ const UserSchema = new Schema<IUser>({
   deletedAt: { type: Date },
 }, { timestamps: true });
 
-// Index for faster queries
-UserSchema.index({ email: 1 });
+// Indexes for faster queries (email index created by unique: true)
 UserSchema.index({ role: 1 });
 UserSchema.index({ 'studentProfile.verificationStatus': 1 });
 
