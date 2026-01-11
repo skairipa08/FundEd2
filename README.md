@@ -100,42 +100,78 @@ Set this as `AUTH_SECRET`.
 
 ## Vercel Deployment
 
-### 1. Import Project
+### Quick Deploy Checklist
+
+Use this checklist when deploying to Vercel:
+
+- [ ] **MongoDB Atlas**: Create cluster, get connection string
+- [ ] **Environment Variables**: Add all 9 required vars in Vercel dashboard
+- [ ] **Google OAuth**: Add redirect URI `https://YOUR-APP.vercel.app/api/auth/callback/google`
+- [ ] **Stripe Webhook**: Create endpoint `https://YOUR-APP.vercel.app/api/stripe/webhook`
+- [ ] **Deploy**: Import repo and deploy
+- [ ] **Test Login**: Verify Google OAuth works
+- [ ] **Test Payment**: Make test donation with card `4242 4242 4242 4242`
+
+### Step-by-Step
+
+#### 1. Import Project
 
 1. Push your code to GitHub
 2. Go to [Vercel Dashboard](https://vercel.com/dashboard)
 3. Click **Add New...** > **Project**
 4. Import your GitHub repository
 
-### 2. Configure Environment Variables
+#### 2. Configure Environment Variables (ALL REQUIRED)
 
-In Vercel project settings, add these environment variables:
+In Vercel project settings > Environment Variables, add:
 
-| Variable | Description |
-|----------|-------------|
-| `MONGODB_URI` | MongoDB Atlas connection string |
-| `AUTH_SECRET` | Random string for NextAuth |
-| `AUTH_URL` | Your Vercel URL (e.g., `https://funded.vercel.app`) |
-| `GOOGLE_CLIENT_ID` | Google OAuth Client ID |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth Secret |
-| `STRIPE_API_KEY` | Stripe Secret Key |
-| `STRIPE_PUBLISHABLE_KEY` | Stripe Publishable Key |
-| `STRIPE_WEBHOOK_SECRET` | Stripe Webhook Signing Secret |
-| `INITIAL_ADMIN_EMAIL` | Email for first admin user |
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `MONGODB_URI` | ✅ | MongoDB Atlas connection string |
+| `AUTH_SECRET` | ✅ | Run `openssl rand -base64 32` to generate |
+| `AUTH_URL` | ✅ | Your Vercel URL: `https://your-app.vercel.app` |
+| `GOOGLE_CLIENT_ID` | ✅ | From Google Cloud Console |
+| `GOOGLE_CLIENT_SECRET` | ✅ | From Google Cloud Console |
+| `STRIPE_API_KEY` | ✅ | Stripe Secret Key (`sk_test_...` or `sk_live_...`) |
+| `STRIPE_PUBLISHABLE_KEY` | ✅ | Stripe Publishable Key (`pk_test_...`) |
+| `STRIPE_WEBHOOK_SECRET` | ✅ | From Stripe Webhook settings (`whsec_...`) |
+| `INITIAL_ADMIN_EMAIL` | ✅ | Email that becomes admin on first login |
 
-### 3. Update OAuth Redirect URIs
+#### 3. Configure Google OAuth Redirect URIs
 
-After deployment, add your Vercel URL to Google OAuth:
-- `https://your-app.vercel.app/api/auth/callback/google`
+In [Google Cloud Console](https://console.cloud.google.com) > APIs & Services > Credentials:
 
-### 4. Update Stripe Webhook
+**Authorized redirect URIs:**
+```
+http://localhost:3000/api/auth/callback/google          (local dev)
+https://your-app.vercel.app/api/auth/callback/google    (production)
+```
 
-Update your Stripe webhook endpoint:
-- `https://your-app.vercel.app/api/stripe/webhook`
+#### 4. Configure Stripe Webhook
 
-### 5. Deploy
+In [Stripe Dashboard](https://dashboard.stripe.com) > Developers > Webhooks:
+
+1. Click **Add endpoint**
+2. **Endpoint URL**: `https://your-app.vercel.app/api/stripe/webhook`
+3. **Events to send** (select all):
+   - `checkout.session.completed`
+   - `checkout.session.async_payment_succeeded`
+   - `checkout.session.async_payment_failed`
+   - `checkout.session.expired`
+   - `charge.refunded`
+4. Copy the **Signing secret** (`whsec_...`) to `STRIPE_WEBHOOK_SECRET`
+
+#### 5. Deploy
 
 Click **Deploy** in Vercel. Future pushes auto-deploy.
+
+#### 6. Post-Deploy Verification
+
+1. Visit your app URL
+2. Click "Sign In" and test Google OAuth
+3. Check that user appears in MongoDB `users` collection
+4. Browse campaigns page loads
+5. Test a donation flow with Stripe test card
 
 ---
 
