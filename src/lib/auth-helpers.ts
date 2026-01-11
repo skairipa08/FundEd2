@@ -3,9 +3,17 @@ import { connectDB } from '@/lib/db';
 import { User, IUser, UserRole } from '@/lib/models/user';
 import { NextResponse } from 'next/server';
 
+export interface SessionUser {
+  id: string;
+  email: string;
+  name: string;
+  image?: string;
+  role: UserRole;
+}
+
 export interface AuthResult {
   user: IUser;
-  session: NonNullable<Awaited<ReturnType<typeof auth>>>;
+  sessionUser: SessionUser;
 }
 
 /**
@@ -32,7 +40,7 @@ export async function requireAuth(): Promise<AuthResult> {
     );
   }
 
-  return { user, session };
+  return { user, sessionUser: session.user as SessionUser };
 }
 
 /**
