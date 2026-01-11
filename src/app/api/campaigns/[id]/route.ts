@@ -100,11 +100,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
     
     const body = await request.json();
-    const allowedFields = ['title', 'story', 'category', 'targetAmount', 'timeline', 'impactLog'];
+    const allowedFields = ['title', 'story', 'category', 'targetAmount', 'timeline', 'impactLog'] as const;
     
     for (const field of allowedFields) {
       if (body[field] !== undefined) {
-        (campaign as Record<string, unknown>)[field] = body[field];
+        // Use type assertion to safely update fields
+        (campaign as unknown as Record<string, unknown>)[field] = body[field];
       }
     }
     
