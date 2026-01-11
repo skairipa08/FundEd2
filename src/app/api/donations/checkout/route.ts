@@ -6,7 +6,7 @@ import { getCurrentUser, handleError } from '@/lib/auth-helpers';
 import { randomUUID } from 'crypto';
 
 const stripe = new Stripe(process.env.STRIPE_API_KEY!, {
-  apiVersion: '2025-05-28.basil',
+  apiVersion: '2025-12-15.clover',
 });
 
 // POST /api/donations/checkout - Create Stripe checkout session

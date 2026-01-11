@@ -4,7 +4,7 @@ import { connectDB } from '@/lib/db';
 import { Donation, Campaign } from '@/lib/models';
 
 const stripe = new Stripe(process.env.STRIPE_API_KEY!, {
-  apiVersion: '2025-05-28.basil',
+  apiVersion: '2025-12-15.clover',
 });
 
 // IMPORTANT: This route must read the raw body for signature verification
