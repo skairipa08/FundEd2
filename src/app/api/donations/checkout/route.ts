@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     
     // Get current user if authenticated
     const currentUser = await getCurrentUser();
-    const donorId = currentUser?._id || null;
+    const donorId = currentUser?._id;
     const finalDonorEmail = donorEmail || currentUser?.email || null;
     
     const successUrl = `${originUrl}/donate/success?session_id={CHECKOUT_SESSION_ID}&campaign_id=${campaignId}`;
